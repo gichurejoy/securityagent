@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,9 +12,20 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(title="Security Agent API", version="1.0.0")
 
 # Setup CORS for the React dashboard
+# Allow localhost for development and a dynamic list of origins for production
+allowed_origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
+# Add production domain/IP from environment if exists
+prod_origin = os.getenv("ALLOWED_ORIGIN")
+if prod_origin:
+    allowed_origins.append(prod_origin)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -29,7 +41,6 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
     # Re-apply CORS headers for the error response
     origin = request.headers.get("origin")
-    allowed_origins = ["http://localhost:3000", "http://127.0.0.1:3000"]
     if origin in allowed_origins:
         response.headers["Access-Control-Allow-Origin"] = origin
         response.headers["Access-Control-Allow-Credentials"] = "true"

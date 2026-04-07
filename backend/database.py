@@ -9,9 +9,16 @@ load_dotenv()
 # Use SQLite for local development, switch to PostgreSQL for VPS
 SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./security_agent.db")
 
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False} if "sqlite" in SQLALCHEMY_DATABASE_URL else {}
-)
+# Check if we are using MySQL or SQLite to apply the correct engine arguments
+engine_args = {}
+if "sqlite" in SQLALCHEMY_DATABASE_URL:
+    engine_args["connect_args"] = {"check_same_thread": False}
+else:
+    # MySQL/PostgreSQL optimizations for long-running VPS processes
+    engine_args["pool_recycle"] = 3600
+    engine_args["pool_pre_ping"] = True
+
+engine = create_engine(SQLALCHEMY_DATABASE_URL, **engine_args)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
