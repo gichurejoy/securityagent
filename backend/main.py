@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from .database import engine, Base
 
-from .routers import agent, dashboard, auth
+from .routers import agent, dashboard, auth, portal
 
 # Create tables
 Base.metadata.create_all(bind=engine)
@@ -52,6 +52,7 @@ def health_check():
     return {"status": "ok"}
 
 # Include modularized routers
+app.include_router(portal.router)
 app.include_router(agent.router)
 app.include_router(dashboard.router)
 app.include_router(auth.router)

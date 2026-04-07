@@ -5,6 +5,7 @@ import logging
 import os
 import sys
 import subprocess
+import argparse
 from config import load_config, save_config, get_server_url, get_device_id, get_company_token, CONFIG_DIR
 from enrollment import get_machine_guid, get_system_info
 from checks.windows import run_all_checks
@@ -16,13 +17,17 @@ logger = logging.getLogger(__name__)
 # Queue logic
 OFFLINE_QUEUE_FILE = CONFIG_DIR / "queue.json"
 
-def enroll_if_needed():
+def enroll_if_needed(email_override=None):
     """Initial phase of the agent execution."""
     current_device_id = get_device_id()
+    config = load_config()
     server_url = get_server_url()
     company_token = get_company_token()
     
-    if current_device_id:
+    # Check if we have an email in config or override
+    email = email_override or config.get("employee_email")
+    
+    if current_device_id and not email_override:
         logger.info(f"Device already enrolled with ID: {current_device_id}")
         return current_device_id
     
@@ -30,11 +35,14 @@ def enroll_if_needed():
     guid = get_machine_guid()
     info = get_system_info()
     
+    # Use the best email available
+    final_email = email or info["email"]
+    
     payload = {
         "device_id": guid,
         "hostname": info["hostname"],
         "employee_name": info["username"],
-        "employee_email": info["email"],
+        "employee_email": final_email,
         "os_platform": info["os_name"],
         "os_version": info["os_version"],
         "device_token": company_token
@@ -178,8 +186,21 @@ def poll_commands():
         pass
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="MedServ Security Agent")
+    parser.add_argument("--email", help="Pre-register with employee email")
+    args = parser.parse_args()
+
     logger.info("Security Agent initializing...")
-    if enroll_if_needed():
+    
+    # If email provided via installer, force it into config
+    if args.email:
+        logger.info(f"Identity provided via CLI: {args.email}")
+        conf = load_config()
+        # Ensure we don't overwrite server_url or company_token if they exist
+        conf["employee_email"] = args.email
+        save_config(conf)
+
+    if enroll_if_needed(email_override=args.email):
         while True:
             run_scan()
             poll_commands()

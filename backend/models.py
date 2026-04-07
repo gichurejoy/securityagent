@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, JSON, Enum
 from sqlalchemy.orm import relationship, validates
 from datetime import datetime
 import enum
-from .database import Base
+from .database import Base, get_eat_time
 
 class CommandStatus(str, enum.Enum):
     PENDING = "pending"
@@ -54,8 +54,8 @@ class Device(Base):
     os_version = Column(String)
     agent_version = Column(String, nullable=True)
     device_token = Column(String, nullable=True)
-    enrolled_at = Column(DateTime, default=datetime.utcnow)
-    last_seen_at = Column(DateTime, default=datetime.utcnow)
+    enrolled_at = Column(DateTime, default=get_eat_time)
+    last_seen_at = Column(DateTime, default=get_eat_time)
     department_id = Column(Integer, ForeignKey("departments.id"), nullable=True)
     is_active = Column(Boolean, default=True)
     risk_score = Column(Integer, default=100)
@@ -70,7 +70,7 @@ class Scan(Base):
     __tablename__ = "scan_results"
     id = Column(Integer, primary_key=True, index=True)
     device_id = Column(Integer, ForeignKey("devices.id"))
-    scanned_at = Column(DateTime, default=datetime.utcnow)
+    scanned_at = Column(DateTime, default=get_eat_time)
     risk_score = Column(Integer)
     risk_tier = Column(String) # Secure, Low Risk, Medium Risk, High Risk, Critical
     trigger_type = Column(String, default="scheduled") # scheduled/manual/boot/network
@@ -103,16 +103,15 @@ class Finding(Base):
     id = Column(Integer, primary_key=True, index=True)
     device_id = Column(Integer, ForeignKey("devices.id"))
     check_key = Column(String, index=True)
-    first_seen_at = Column(DateTime, default=datetime.utcnow)
-    last_seen_at = Column(DateTime, default=datetime.utcnow)
+    first_seen_at = Column(DateTime, default=get_eat_time)
+    last_seen_at = Column(DateTime, default=get_eat_time)
     status = Column(Enum(FindingStatus), default=FindingStatus.OPEN)
-    assignee_id = Column(Integer, ForeignKey("it_users.id"), nullable=True)
+    assignee = Column(String, default="IT") # IT or EMPLOYEE
     due_date = Column(DateTime, nullable=True)
     notes = Column(String, nullable=True)
     auto_closed_at = Column(DateTime, nullable=True)
     
     device = relationship("Device", back_populates="findings")
-    assignee = relationship("ITUser")
 
     @validates("status")
     def validate_status(self, key, value):
@@ -127,7 +126,7 @@ class Command(Base):
     command_type = Column(String)
     payload_json = Column(JSON, nullable=True)
     status = Column(Enum(CommandStatus), default=CommandStatus.PENDING)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=get_eat_time)
     picked_up_at = Column(DateTime, nullable=True)
     completed_at = Column(DateTime, nullable=True)
     created_by = Column(Integer, ForeignKey("it_users.id"), nullable=True)
@@ -152,7 +151,7 @@ class Notification(Base):
     id = Column(Integer, primary_key=True, index=True)
     alert_rule_id = Column(Integer, ForeignKey("alert_rules.id"))
     device_id = Column(Integer, ForeignKey("devices.id"), nullable=True)
-    fired_at = Column(DateTime, default=datetime.utcnow)
+    fired_at = Column(DateTime, default=get_eat_time)
     channel = Column(String)
     message = Column(String)
     finding_id = Column(Integer, ForeignKey("findings.id"), nullable=True)

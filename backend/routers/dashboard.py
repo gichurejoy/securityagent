@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from typing import List, Dict, Any
 
 from .. import models, schemas
-from ..database import get_db
+from ..database import get_db, get_eat_time
 from ..auth import get_current_user
 
 router = APIRouter(prefix="/api/v1/dashboard", tags=["dashboard"], dependencies=[Depends(get_current_user)])
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/api/v1/dashboard", tags=["dashboard"], dependencies=
 def get_overview(db: Session = Depends(get_db)):
     total = db.query(models.Device).filter(models.Device.is_active == True).count()
     
-    day_ago = datetime.utcnow() - timedelta(days=1)
+    day_ago = get_eat_time() - timedelta(days=1)
     scanned_24h = db.query(models.Device).filter(
         models.Device.is_active == True,
         models.Device.last_seen_at >= day_ago
@@ -67,15 +67,18 @@ def get_findings(db: Session = Depends(get_db)):
     return db.query(models.Finding).all()
 
 @router.patch("/findings/{finding_id}")
-def update_finding(finding_id: int, status_update: Dict[str, str], db: Session = Depends(get_db)):
+def update_finding(finding_id: int, patch_data: Dict[str, Any], db: Session = Depends(get_db)):
     finding = db.query(models.Finding).filter(models.Finding.id == finding_id).first()
     if not finding:
         raise HTTPException(status_code=404, detail="Finding not found")
         
-    if "status" in status_update:
-        finding.status = status_update["status"]
+    if "status" in patch_data:
+        finding.status = patch_data["status"]
         if finding.status == schemas.FindingStatus.RESOLVED:
-             finding.auto_closed_at = datetime.utcnow()
+             finding.auto_closed_at = get_eat_time()
+    
+    if "assignee" in patch_data:
+        finding.assignee = patch_data["assignee"]
              
     db.commit()
     return {"status": "success", "finding": finding}
@@ -97,7 +100,7 @@ def create_command(command: schemas.CommandCreate, db: Session = Depends(get_db)
         command_type=command.command_type,
         payload_json=command.payload_json,
         status=schemas.CommandStatus.PENDING,
-        created_at=datetime.utcnow()
+        created_at=get_eat_time()
     )
     db.add(db_command)
     db.commit()
@@ -113,7 +116,7 @@ def get_device_history(device_id: int, db: Session = Depends(get_db)):
 @router.get("/trends")
 def get_trends(db: Session = Depends(get_db)):
     # Returns a simulated 30-day org trend for MVP
-    base_date = datetime.utcnow()
+    base_date = get_eat_time()
     trend_data = []
     for i in range(30, -1, -1):
         day = base_date - timedelta(days=i)

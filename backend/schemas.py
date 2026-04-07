@@ -67,6 +67,7 @@ class FindingRead(BaseModel):
     first_seen_at: datetime
     last_seen_at: datetime
     status: FindingStatus
+    assignee: str
     notes: Optional[str]
     
     class Config:
@@ -106,3 +107,18 @@ class NotificationRead(BaseModel):
     
     class Config:
         from_attributes = True
+
+class PortalStats(BaseModel):
+    hostname: str
+    last_scan: datetime
+    risk_score: int
+    active_findings: int
+    status_summary: str
+    findings: List[FindingRead] = []
+
+class PortalHistoryItem(BaseModel):
+    date: datetime
+    score: int
+
+class PortalHistory(BaseModel):
+    history: List[PortalHistoryItem]

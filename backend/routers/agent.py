@@ -1,13 +1,35 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
+import os
+from pathlib import Path
 from datetime import datetime
 from typing import List
 
 from .. import models, schemas
-from ..database import get_db
+from ..database import get_db, get_eat_time
 from ..services import scoring
 
 router = APIRouter(prefix="/api/v1", tags=["agent"])
+
+@router.get("/agent/download")
+def download_agent():
+    """Serves the latest compiled security agent executable."""
+    # Production path for the executable
+    exe_path = Path(__file__).parent.parent.parent / "dist" / "medserv_agent.exe"
+    
+    if not exe_path.exists():
+        # Fallback to current working directory during dev if not found
+        exe_path = Path("dist/medserv_agent.exe")
+        
+    if not exe_path.exists():
+        raise HTTPException(status_code=404, detail="Agent executable not found on server. Please contact IT.")
+        
+    return FileResponse(
+        path=exe_path,
+        filename="MedServ_Security_Agent.exe",
+        media_type="application/octet-stream"
+    )
 
 @router.post("/enroll", response_model=schemas.DeviceRead)
 def enroll_device(device: schemas.DeviceEnroll, db: Session = Depends(get_db)):
@@ -20,7 +42,7 @@ def enroll_device(device: schemas.DeviceEnroll, db: Session = Depends(get_db)):
         db_device.os_platform = device.os_platform
         db_device.os_version = device.os_version
         db_device.device_token = device.device_token
-        db_device.last_seen_at = datetime.utcnow()
+        db_device.last_seen_at = get_eat_time()
         db_device.is_active = True
         db.commit()
         db.refresh(db_device)
@@ -34,7 +56,7 @@ def enroll_device(device: schemas.DeviceEnroll, db: Session = Depends(get_db)):
         os_platform=device.os_platform,
         os_version=device.os_version,
         device_token=device.device_token,
-        last_seen_at=datetime.utcnow(),
+        last_seen_at=get_eat_time(),
         risk_score=100
     )
     db.add(new_device)
@@ -59,7 +81,7 @@ def submit_scan(scan: schemas.ScanCreate, db: Session = Depends(get_db)):
         risk_score=final_score,
         risk_tier=tier,
         raw_json=results_as_dicts,
-        scanned_at=datetime.utcnow()
+        scanned_at=get_eat_time()
     )
     db.add(new_scan)
     db.flush() # get scan ID
@@ -86,14 +108,14 @@ def submit_scan(scan: schemas.ScanCreate, db: Session = Depends(get_db)):
                 finding = models.Finding(
                     device_id=db_device.id,
                     check_key=r["check_key"],
-                    first_seen_at=datetime.utcnow(),
-                    last_seen_at=datetime.utcnow(),
+                    first_seen_at=get_eat_time(),
+                    last_seen_at=get_eat_time(),
                     status=schemas.FindingStatus.OPEN,
                     notes=r["detail"]
                 )
                 db.add(finding)
             else:
-                existing_finding.last_seen_at = datetime.utcnow()
+                existing_finding.last_seen_at = get_eat_time()
                 existing_finding.notes = r["detail"]
         else:
              # Auto-close resolved finding
@@ -104,10 +126,10 @@ def submit_scan(scan: schemas.ScanCreate, db: Session = Depends(get_db)):
              ).first()
              if existing_finding:
                  existing_finding.status = schemas.FindingStatus.RESOLVED
-                 existing_finding.auto_closed_at = datetime.utcnow()
+                 existing_finding.auto_closed_at = get_eat_time()
 
     db_device.risk_score = final_score
-    db_device.last_seen_at = datetime.utcnow()
+    db_device.last_seen_at = get_eat_time()
     
     db.commit()
     return {"status": "success", "scan_id": new_scan.id, "score": final_score}

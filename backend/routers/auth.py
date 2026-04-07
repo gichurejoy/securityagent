@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from datetime import timedelta, datetime
 
 from .. import models, schemas
-from ..database import get_db
+from ..database import get_db, get_eat_time
 from ..auth import verify_password, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES, get_password_hash
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
@@ -33,7 +33,7 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
              headers={"WWW-Authenticate": "Bearer"},
          )
     
-    user.last_login_at = datetime.utcnow()
+    user.last_login_at = get_eat_time()
     db.commit()
     
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
