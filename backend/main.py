@@ -1,0 +1,46 @@
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
+from .database import engine, Base
+
+from .routers import agent, dashboard, auth
+
+# Create tables
+Base.metadata.create_all(bind=engine)
+
+app = FastAPI(title="Security Agent API", version="1.0.0")
+
+# Setup CORS for the React dashboard
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    # This ensures that even when the backend crashes, it still sends the CORS headers.
+    # Without this, a 500 error in React 19 appears as a "Failed to fetch" due to missing CORS headers.
+    response = JSONResponse(
+        status_code=500,
+        content={"detail": "Internal Server Error", "exception": str(exc)},
+    )
+    # Re-apply CORS headers for the error response
+    origin = request.headers.get("origin")
+    allowed_origins = ["http://localhost:3000", "http://127.0.0.1:3000"]
+    if origin in allowed_origins:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+    
+    return response
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
+
+# Include modularized routers
+app.include_router(agent.router)
+app.include_router(dashboard.router)
+app.include_router(auth.router)
