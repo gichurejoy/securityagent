@@ -1,6 +1,10 @@
 [Setup]
 AppName=MedServ Diagnostic Agent
 AppVersion=1.0.0
+AppPublisher=MedServ IT
+AppPublisherURL=https://medservafrica.com
+AppSupportURL=https://medservafrica.com
+AppUpdatesURL=https://medservafrica.com
 DefaultDirName={autopf}\MedServDiagnostic
 DefaultGroupName=MedServ Diagnostic
 UninstallDisplayIcon={app}\medserv_agent.exe

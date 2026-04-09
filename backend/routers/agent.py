@@ -16,18 +16,18 @@ router = APIRouter(prefix="/api/v1", tags=["agent"])
 def download_agent():
     """Serves the latest compiled security agent executable."""
     # Production path for the executable
-    exe_path = Path(__file__).parent.parent.parent / "dist" / "medserv_agent.exe"
+    exe_path = Path(__file__).parent.parent.parent / "dist" / "MedServAgentInstaller.exe"
     
     if not exe_path.exists():
         # Fallback to current working directory during dev if not found
-        exe_path = Path("dist/medserv_agent.exe")
+        exe_path = Path("dist/MedServAgentInstaller.exe")
         
     if not exe_path.exists():
-        raise HTTPException(status_code=404, detail="Agent executable not found on server. Please contact IT.")
+        raise HTTPException(status_code=404, detail="Agent installer not found on server. Please contact IT.")
         
     return FileResponse(
         path=exe_path,
-        filename="MedServ_Security_Agent.exe",
+        filename="MedServ_Security_Agent_Setup.exe",
         media_type="application/octet-stream"
     )
 
