@@ -29,31 +29,31 @@ class ITUserRole(str, enum.Enum):
 class Department(Base):
     __tablename__ = "departments"
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, unique=True)
-    policy_profile_id = Column(String, nullable=True) # E.g., stricter profile vs relaxed
+    name = Column(String(255), unique=True)
+    policy_profile_id = Column(String(255), nullable=True) # E.g., stricter profile vs relaxed
     
     devices = relationship("Device", back_populates="department")
 
 class ITUser(Base):
     __tablename__ = "it_users"
     id = Column(Integer, primary_key=True, index=True)
-    email = Column(String, unique=True, index=True)
-    name = Column(String)
+    email = Column(String(255), unique=True, index=True)
+    name = Column(String(255))
     role = Column(Enum(ITUserRole), default=ITUserRole.VIEWER)
-    hashed_password = Column(String)
+    hashed_password = Column(String(255))
     last_login_at = Column(DateTime, nullable=True)
 
 class Device(Base):
     __tablename__ = "devices"
     id = Column(Integer, primary_key=True, index=True)
-    device_id = Column(String, unique=True, index=True) # Unique hardware ID
-    hostname = Column(String)
-    employee_email = Column(String, nullable=True)
-    employee_name = Column(String, nullable=True)
-    os_platform = Column(String) # Windows, Darwin, Linux
-    os_version = Column(String)
-    agent_version = Column(String, nullable=True)
-    device_token = Column(String, nullable=True)
+    device_id = Column(String(255), unique=True, index=True) # Unique hardware ID
+    hostname = Column(String(255))
+    employee_email = Column(String(255), nullable=True)
+    employee_name = Column(String(255), nullable=True)
+    os_platform = Column(String(255)) # Windows, Darwin, Linux
+    os_version = Column(String(255))
+    agent_version = Column(String(255), nullable=True)
+    device_token = Column(String(255), nullable=True)
     enrolled_at = Column(DateTime, default=get_eat_time)
     last_seen_at = Column(DateTime, default=get_eat_time)
     department_id = Column(Integer, ForeignKey("departments.id"), nullable=True)
@@ -72,8 +72,8 @@ class Scan(Base):
     device_id = Column(Integer, ForeignKey("devices.id"))
     scanned_at = Column(DateTime, default=get_eat_time)
     risk_score = Column(Integer)
-    risk_tier = Column(String) # Secure, Low Risk, Medium Risk, High Risk, Critical
-    trigger_type = Column(String, default="scheduled") # scheduled/manual/boot/network
+    risk_tier = Column(String(50)) # Secure, Low Risk, Medium Risk, High Risk, Critical
+    trigger_type = Column(String(50), default="scheduled") # scheduled/manual/boot/network
     raw_json = Column(JSON)
     
     device = relationship("Device", back_populates="scans")
@@ -83,10 +83,10 @@ class CheckResult(Base):
     __tablename__ = "check_results"
     id = Column(Integer, primary_key=True, index=True)
     scan_id = Column(Integer, ForeignKey("scan_results.id"))
-    check_key = Column(String, index=True)
-    category = Column(String)
+    check_key = Column(String(255), index=True)
+    category = Column(String(255))
     status = Column(Enum(Status))
-    detail = Column(String)
+    detail = Column(String(1000))
     weight = Column(Integer, default=0)
     score_impact = Column(Integer, default=0)
     
@@ -102,13 +102,13 @@ class Finding(Base):
     __tablename__ = "findings"
     id = Column(Integer, primary_key=True, index=True)
     device_id = Column(Integer, ForeignKey("devices.id"))
-    check_key = Column(String, index=True)
+    check_key = Column(String(255), index=True)
     first_seen_at = Column(DateTime, default=get_eat_time)
     last_seen_at = Column(DateTime, default=get_eat_time)
     status = Column(Enum(FindingStatus), default=FindingStatus.OPEN)
-    assignee = Column(String, default="IT") # IT or EMPLOYEE
+    assignee = Column(String(50), default="IT") # IT or EMPLOYEE
     due_date = Column(DateTime, nullable=True)
-    notes = Column(String, nullable=True)
+    notes = Column(String(1000), nullable=True)
     auto_closed_at = Column(DateTime, nullable=True)
     
     device = relationship("Device", back_populates="findings")
@@ -123,7 +123,7 @@ class Command(Base):
     __tablename__ = "commands"
     id = Column(Integer, primary_key=True, index=True)
     device_id = Column(Integer, ForeignKey("devices.id"))
-    command_type = Column(String)
+    command_type = Column(String(255))
     payload_json = Column(JSON, nullable=True)
     status = Column(Enum(CommandStatus), default=CommandStatus.PENDING)
     created_at = Column(DateTime, default=get_eat_time)
@@ -136,14 +136,14 @@ class Command(Base):
 class AlertRule(Base):
     __tablename__ = "alert_rules"
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String)
-    trigger_check = Column(String, nullable=True) # e.g., 'bitlocker_c'
-    trigger_condition = Column(String) # e.g., 'fail' or 'score < 50'
-    trigger_value = Column(String, nullable=True)
-    severity = Column(String) # low, medium, high, critical
-    notify_via = Column(String) # e.g. 'slack,email'
-    frequency = Column(String) # immediately, daily_digest
-    notify_emails = Column(String, nullable=True)
+    name = Column(String(255))
+    trigger_check = Column(String(255), nullable=True) # e.g., 'bitlocker_c'
+    trigger_condition = Column(String(255)) # e.g., 'fail' or 'score < 50'
+    trigger_value = Column(String(255), nullable=True)
+    severity = Column(String(50)) # low, medium, high, critical
+    notify_via = Column(String(255)) # e.g. 'slack,email'
+    frequency = Column(String(50)) # immediately, daily_digest
+    notify_emails = Column(String(1000), nullable=True)
     is_active = Column(Boolean, default=True)
 
 class Notification(Base):
@@ -152,8 +152,8 @@ class Notification(Base):
     alert_rule_id = Column(Integer, ForeignKey("alert_rules.id"))
     device_id = Column(Integer, ForeignKey("devices.id"), nullable=True)
     fired_at = Column(DateTime, default=get_eat_time)
-    channel = Column(String)
-    message = Column(String)
+    channel = Column(String(50))
+    message = Column(String(1000))
     finding_id = Column(Integer, ForeignKey("findings.id"), nullable=True)
     
     rule = relationship("AlertRule")
