@@ -3,7 +3,7 @@ from typing import Optional, List, Dict, Any
 from datetime import datetime
 from enum import Enum
 
-from .models import CommandStatus, Status, FindingStatus, ITUserRole
+from models import CommandStatus, Status, FindingStatus, ITUserRole
 
 class DeviceBase(BaseModel):
     device_id: str

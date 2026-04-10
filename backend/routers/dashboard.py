@@ -4,9 +4,9 @@ from sqlalchemy import func
 from datetime import datetime, timedelta
 from typing import List, Dict, Any
 
-from .. import models, schemas
-from ..database import get_db, get_eat_time
-from ..auth import get_current_user
+import models, schemas
+from database import get_db, get_eat_time
+from auth import get_current_user
 
 router = APIRouter(prefix="/api/v1/dashboard", tags=["dashboard"], dependencies=[Depends(get_current_user)])
 
@@ -29,7 +29,7 @@ def get_overview(db: Session = Depends(get_db)):
     tiers = {"Secure": 0, "Low Risk": 0, "Medium Risk": 0, "High Risk": 0, "Critical": 0}
     devices = db.query(models.Device).filter(models.Device.is_active == True).all()
     for d in devices:
-        from ..services.scoring import get_tier
+        from services.scoring import get_tier
         tier = get_tier(d.risk_score)
         tiers[tier] += 1
         

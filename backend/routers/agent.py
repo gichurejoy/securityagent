@@ -6,9 +6,9 @@ from pathlib import Path
 from datetime import datetime
 from typing import List
 
-from .. import models, schemas
-from ..database import get_db, get_eat_time
-from ..services import scoring
+import models, schemas
+from database import get_db, get_eat_time
+from services import scoring
 
 router = APIRouter(prefix="/api/v1", tags=["agent"])
 

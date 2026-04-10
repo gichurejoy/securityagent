@@ -3,9 +3,9 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import timedelta, datetime
 
-from .. import models, schemas
-from ..database import get_db, get_eat_time
-from ..auth import verify_password, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES, get_password_hash
+import models, schemas
+from database import get_db, get_eat_time
+from auth import verify_password, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES, get_password_hash
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 

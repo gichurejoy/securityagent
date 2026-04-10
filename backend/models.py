@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, JSON, Enum
 from sqlalchemy.orm import relationship, validates
 from datetime import datetime
 import enum
-from .database import Base, get_eat_time
+from database import Base, get_eat_time
 
 class CommandStatus(str, enum.Enum):
     PENDING = "pending"

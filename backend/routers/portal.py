@@ -3,8 +3,8 @@ from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 from typing import List
 
-from .. import models, schemas
-from ..database import get_db, get_eat_time
+import models, schemas
+from database import get_db, get_eat_time
 
 router = APIRouter(prefix="/api/v1/portal", tags=["portal"])
 
