@@ -2,9 +2,9 @@ import os
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from .database import engine, Base
+from database import engine, Base
 
-from .routers import agent, dashboard, auth, portal
+from routers import agent, dashboard, auth, portal
 
 # Create tables
 Base.metadata.create_all(bind=engine)

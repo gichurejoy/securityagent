@@ -1,3 +1,4 @@
+# requirements.txt (updated)
 fastapi
 uvicorn
 sqlalchemy
@@ -5,3 +6,6 @@ pydantic
 passlib[bcrypt]
 python-jose[cryptography]
 python-multipart
+python-dotenv
+a2wsgi
+pymysql
