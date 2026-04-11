@@ -8,7 +8,7 @@ import models, schemas
 from database import get_db, get_eat_time
 from auth import get_current_user
 
-router = APIRouter(prefix="/api/v1/dashboard", tags=["dashboard"], dependencies=[Depends(get_current_user)])
+router = APIRouter(prefix="/v1/dashboard", tags=["dashboard"], dependencies=[Depends(get_current_user)])
 
 @router.get("/overview", response_model=schemas.DashboardOverview)
 def get_overview(db: Session = Depends(get_db)):

@@ -6,7 +6,7 @@ from typing import List
 import models, schemas
 from database import get_db, get_eat_time
 
-router = APIRouter(prefix="/api/v1/portal", tags=["portal"])
+router = APIRouter(prefix="/v1/portal", tags=["portal"])
 
 @router.get("/stats/{email}", response_model=schemas.PortalStats)
 def get_portal_stats(email: str, db: Session = Depends(get_db)):

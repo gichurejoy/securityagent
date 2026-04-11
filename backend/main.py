@@ -47,7 +47,11 @@ async def global_exception_handler(request: Request, exc: Exception):
     
     return response
 
-@app.get("/health")
+@app.get("/")
+def read_root():
+    return {"message": "Security Agent API is Live"}
+
+@app.get("/v1/health")
 def health_check():
     return {"status": "ok"}
 

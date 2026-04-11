@@ -10,7 +10,7 @@ import models, schemas
 from database import get_db, get_eat_time
 from services import scoring
 
-router = APIRouter(prefix="/api/v1", tags=["agent"])
+router = APIRouter(prefix="/v1", tags=["agent"])
 
 @router.get("/agent/download")
 def download_agent():
