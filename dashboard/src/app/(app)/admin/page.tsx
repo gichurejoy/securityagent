@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { motion, Variants } from "framer-motion";
 import { ShieldAlert, ServerCrash, Clock, Activity, ArrowUpRight, ArrowDownRight, ShieldCheck, Cpu } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, CartesianGrid, LineChart, Line, XAxis, YAxis } from "recharts";
+import { API_BASE_URL } from "@/lib/api";
 
 const MOCK_METRICS = {
   total: 26,
@@ -48,7 +49,7 @@ export default function OverviewPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/api/v1/dashboard/overview", {
+    fetch(`${API_BASE_URL}/v1/dashboard/overview`, {
       headers: { "Authorization": "Bearer dev-token" }
     })
       .then(res => {

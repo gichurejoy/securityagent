@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Shield, Activity, ListChecks, Mail, ChevronRight, CheckCircle2, AlertTriangle, TrendingUp } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { API_BASE_URL } from "@/lib/api";
 
 export default function EmployeePortal() {
   const [email, setEmail] = useState("");
@@ -17,11 +18,11 @@ export default function EmployeePortal() {
     setLoading(true);
     setError("");
     try {
-      const statsRes = await fetch(`http://127.0.0.1:8000/api/v1/portal/stats/${email}`);
+      const statsRes = await fetch(`${API_BASE_URL}/v1/portal/stats/${email}`);
       if (!statsRes.ok) throw new Error("Could not find a device linked to this email.");
       const statsData = await statsRes.json();
       
-      const historyRes = await fetch(`http://127.0.0.1:8000/api/v1/portal/history/${email}`);
+      const historyRes = await fetch(`${API_BASE_URL}/v1/portal/history/${email}`);
       const historyData = await historyRes.json();
 
       setStats(statsData);

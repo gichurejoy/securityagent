@@ -3,13 +3,14 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { TrendingUp, Activity } from "lucide-react";
+import { API_BASE_URL } from "@/lib/api";
 
 export default function TrendsPage() {
   const [trendData, setTrendData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/api/v1/dashboard/trends", { headers: { "Authorization": "Bearer dev-token" } })
+    fetch(`${API_BASE_URL}/v1/dashboard/trends`, { headers: { "Authorization": "Bearer dev-token" } })
       .then(r => r.ok ? r.json() : [])
       .then(data => {
         setTrendData(data);

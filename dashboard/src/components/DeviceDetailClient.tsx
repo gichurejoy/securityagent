@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Monitor, ShieldAlert, CheckCircle2, AlertTriangle, Crosshair, RefreshCw } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from "recharts";
+import { API_BASE_URL } from "@/lib/api";
 
 export default function DeviceDetailClient() {
    const params = useParams();
@@ -17,8 +18,8 @@ export default function DeviceDetailClient() {
 
    useEffect(() => {
       Promise.all([
-         fetch(`http://127.0.0.1:8000/api/v1/dashboard/devices/${deviceId}`, { headers: { "Authorization": "Bearer dev-token" } }).then(r => r.ok ? r.json() : null),
-         fetch(`http://127.0.0.1:8000/api/v1/dashboard/devices/${deviceId}/history`, { headers: { "Authorization": "Bearer dev-token" } }).then(r => r.ok ? r.json() : [])
+         fetch(`${API_BASE_URL}/v1/dashboard/devices/${deviceId}`, { headers: { "Authorization": "Bearer dev-token" } }).then(r => r.ok ? r.json() : null),
+         fetch(`${API_BASE_URL}/v1/dashboard/devices/${deviceId}/history`, { headers: { "Authorization": "Bearer dev-token" } }).then(r => r.ok ? r.json() : [])
       ]).then(([deviceRes, historyRes]) => {
          setDeviceData(deviceRes);
          setHistoryData(Array.isArray(historyRes) ? historyRes.reverse() : []); // Chronological
@@ -32,7 +33,7 @@ export default function DeviceDetailClient() {
    const handleScanNow = async () => {
       setCommandQueued(true);
       try {
-         await fetch("http://127.0.0.1:8000/api/v1/dashboard/commands", {
+         await fetch(`${API_BASE_URL}/v1/dashboard/commands`, {
             method: "POST",
             headers: { 
                "Content-Type": "application/json",

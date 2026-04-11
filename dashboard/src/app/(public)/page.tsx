@@ -3,6 +3,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Shield, Download, CheckCircle2, Apple, Monitor, Globe, ChevronRight } from "lucide-react";
 import Link from "next/link";
+import { API_BASE_URL } from "@/lib/api";
 
 export default function LandingPage() {
   return (
@@ -42,7 +43,7 @@ export default function LandingPage() {
               <p className="text-neutral-500 text-sm mb-8">v1.0.0 • Supports Win 10 & 11</p>
               
               <a 
-                href="http://localhost:8000/api/v1/agent/download" 
+                href={`${API_BASE_URL}/v1/agent/download`} 
                 className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 px-6 rounded-xl flex items-center justify-center gap-3 transition-all shadow-lg shadow-indigo-600/20"
               >
                  <Download size={20} /> Download Agent (.exe)

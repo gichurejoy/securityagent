@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Bell, ShieldAlert, Zap, History } from "lucide-react";
+import { API_BASE_URL } from "@/lib/api";
 
 export default function AlertsPage() {
   const [rules, setRules] = useState<any[]>([]);
@@ -10,8 +11,8 @@ export default function AlertsPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch("http://127.0.0.1:8000/api/v1/dashboard/alerts/rules", { headers: { "Authorization": "Bearer dev-token" } }).then(r => r.ok ? r.json() : []),
-      fetch("http://127.0.0.1:8000/api/v1/dashboard/alerts/history", { headers: { "Authorization": "Bearer dev-token" } }).then(r => r.ok ? r.json() : [])
+      fetch(`${API_BASE_URL}/v1/dashboard/alerts/rules`, { headers: { "Authorization": "Bearer dev-token" } }).then(r => r.ok ? r.json() : []),
+      fetch(`${API_BASE_URL}/v1/dashboard/alerts/history`, { headers: { "Authorization": "Bearer dev-token" } }).then(r => r.ok ? r.json() : [])
     ]).then(([rData, hData]) => {
       setRules(Array.isArray(rData) ? rData : []);
       setHistory(Array.isArray(hData) ? hData : []);

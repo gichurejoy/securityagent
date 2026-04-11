@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { FileDown, CheckCircle } from "lucide-react";
+import { API_BASE_URL } from "@/lib/api";
 
 export default function ReportsPage() {
   const [generating, setGenerating] = useState(false);
@@ -10,7 +11,7 @@ export default function ReportsPage() {
   const handleGenerate = async () => {
     setGenerating(true);
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/dashboard/reports/generate", {
+      const res = await fetch(`${API_BASE_URL}/v1/dashboard/reports/generate`, {
          method: "POST",
          headers: { "Authorization": "Bearer dev-token" }
       });

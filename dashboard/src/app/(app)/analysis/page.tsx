@@ -3,13 +3,14 @@ import React, { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { Activity, LayoutDashboard, Target } from "lucide-react";
+import { API_BASE_URL } from "@/lib/api";
 
 export default function AnalysisPage() {
   const [analysisData, setAnalysisData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/api/v1/dashboard/checks/analysis", {
+    fetch(`${API_BASE_URL}/v1/dashboard/checks/analysis`, {
       headers: { "Authorization": "Bearer dev-token" }
     })
       .then(r => r.ok ? r.json() : [])

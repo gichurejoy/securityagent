@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Monitor, Search, Filter, MoreHorizontal, ShieldAlert, CheckCircle2 } from "lucide-react";
+import { API_BASE_URL } from "@/lib/api";
 
 export default function DevicesPage() {
   const router = useRouter();
@@ -10,7 +11,7 @@ export default function DevicesPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/api/v1/dashboard/devices", {
+    fetch(`${API_BASE_URL}/v1/dashboard/devices`, {
       headers: { "Authorization": "Bearer dev-token" }
     })
       .then(res => res.ok ? res.json() : [])

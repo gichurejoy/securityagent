@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { ShieldAlert, AlertTriangle, AlertCircle, Search, Filter } from "lucide-react";
+import { API_BASE_URL } from "@/lib/api";
 
 export default function FindingsPage() {
   const [findings, setFindings] = useState<any[]>([]);
@@ -10,8 +11,8 @@ export default function FindingsPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch("http://127.0.0.1:8000/api/v1/dashboard/findings", { headers: { "Authorization": "Bearer dev-token" } }).then(r => r.ok ? r.json() : []),
-      fetch("http://127.0.0.1:8000/api/v1/dashboard/devices", { headers: { "Authorization": "Bearer dev-token" } }).then(r => r.ok ? r.json() : [])
+      fetch(`${API_BASE_URL}/v1/dashboard/findings`, { headers: { "Authorization": "Bearer dev-token" } }).then(r => r.ok ? r.json() : []),
+      fetch(`${API_BASE_URL}/v1/dashboard/devices`, { headers: { "Authorization": "Bearer dev-token" } }).then(r => r.ok ? r.json() : [])
     ]).then(([fRes, dRes]) => {
       const dMap: Record<number, string> = {};
       if (Array.isArray(dRes)) {
@@ -29,12 +30,12 @@ export default function FindingsPage() {
   const patchFinding = async (findingId: number, patch: any) => {
      // Optimistic update
      setFindings(prev => prev.map(f => f.id === findingId ? { ...f, ...patch } : f));
-     try {
-       await fetch(`http://127.0.0.1:8000/api/v1/dashboard/findings/${findingId}`, {
-         method: "PATCH",
-         headers: { "Content-Type": "application/json", "Authorization": "Bearer dev-token" },
-         body: JSON.stringify(patch)
-       });
+      try {
+        await fetch(`${API_BASE_URL}/v1/dashboard/findings/${findingId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json", "Authorization": "Bearer dev-token" },
+          body: JSON.stringify(patch)
+        });
      } catch (err) {
        console.error("Failed to patch finding");
      }
