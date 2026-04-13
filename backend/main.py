@@ -9,7 +9,14 @@ from routers import agent, dashboard, auth, portal
 # Create tables
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="Security Agent API", version="1.0.0")
+# app = FastAPI(title="Security Agent API", version="1.0.0")
+# AFTER
+root_path = os.getenv("API_ROOT_PATH", "/api")
+app = FastAPI(
+    title="Security Agent API",
+    version="1.0.0",
+    root_path=root_path
+)
 
 # Setup CORS for the React dashboard
 # Allow localhost for development and a dynamic list of origins for production
