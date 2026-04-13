@@ -15,21 +15,31 @@ router = APIRouter(prefix="/v1", tags=["agent"])
 @router.get("/agent/download")
 def download_agent():
     """Serves the latest compiled security agent executable."""
-    # Production path for the executable
-    exe_path = Path(__file__).parent.parent.parent / "dist" / "MedServAgentInstaller.exe"
-    
-    if not exe_path.exists():
-        # Fallback to current working directory during dev if not found
-        exe_path = Path("dist/MedServAgentInstaller.exe")
+    try:
+        # Improved path resolution for production
+        base_dir = Path(__file__).resolve().parent.parent.parent
+        exe_path = base_dir / "dist" / "MedServAgentInstaller.exe"
         
-    if not exe_path.exists():
-        raise HTTPException(status_code=404, detail="Agent installer not found on server. Please contact IT.")
-        
-    return FileResponse(
-        path=exe_path,
-        filename="MedServ_Security_Agent_Setup.exe",
-        media_type="application/octet-stream"
-    )
+        # Fallback check
+        if not exe_path.exists():
+            exe_path = Path("dist/MedServAgentInstaller.exe").resolve()
+            
+        if not exe_path.exists():
+            print(f"DEBUG: Installer not found. Checked: {exe_path}")
+            raise HTTPException(
+                status_code=404, 
+                detail="Agent installer not found on server. Please ensure the 'dist' folder is uploaded."
+            )
+            
+        return FileResponse(
+            path=exe_path,
+            filename="MedServ_Security_Agent_Setup.exe",
+            media_type="application/octet-stream"
+        )
+    except Exception as e:
+        if isinstance(e, HTTPException): raise e
+        print(f"DOWNLOAD ERROR: {str(e)}")
+        raise HTTPException(status_code=500, detail="An error occurred while preparing the download.")
 
 @router.post("/enroll", response_model=schemas.DeviceRead)
 def enroll_device(device: schemas.DeviceEnroll, db: Session = Depends(get_db)):
