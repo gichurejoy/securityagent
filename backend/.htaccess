@@ -1,0 +1,16 @@
+PassengerEnabled on
+PassengerAppType wsgi
+PassengerStartupFile passenger_wsgi.py
+
+# Disable Node.js detection
+PassengerNodejs /usr/bin/node
+
+# Ensure Python 3 is used
+PassengerPython /home/medserva/domains/security.medservafrica.com/public_html/securityagent/backend/venv/bin/python3
+
+# Allow all requests to pass through to the app
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^(.*)$ passenger_wsgi.py/$1 [L]
+</IfModule>
