@@ -12,54 +12,24 @@ from services import scoring
 
 router = APIRouter(prefix="/v1", tags=["agent"])
 
-@router.get("/diag/paths")
-def diagnostic_paths():
-    import os
-    try:
-        current_file = Path(__file__).resolve()
-        parent_1 = current_file.parent # routers/
-        parent_2 = parent_1.parent # backend/
-        parent_3 = parent_2.parent # securityagent/
-        
-        return {
-            "__file__": str(current_file),
-            "cwd": os.getcwd(),
-            "parent_3": str(parent_3),
-            "parent_3_contents": os.listdir(parent_3) if parent_3.exists() else "Not found",
-            "dist_exists": (parent_3 / "dist").exists(),
-            "dist_contents": os.listdir(parent_3 / "dist") if (parent_3 / "dist").exists() else "None"
-        }
-    except Exception as e:
-        return {"error": str(e)}
-
 @router.get("/agent/download")
 def download_agent():
     """Serves the latest compiled security agent executable."""
-    try:
-        # Improved path resolution for production
-        base_dir = Path(__file__).resolve().parent.parent.parent
-        exe_path = base_dir / "dist" / "MedServAgentInstaller.exe"
+    # Production path for the executable
+    exe_path = Path(__file__).parent.parent.parent / "dist" / "MedServAgentInstaller.exe"
+    
+    if not exe_path.exists():
+        # Fallback to current working directory during dev if not found
+        exe_path = Path("dist/MedServAgentInstaller.exe")
         
-        # Fallback check
-        if not exe_path.exists():
-            exe_path = Path("dist/MedServAgentInstaller.exe").resolve()
-            
-        if not exe_path.exists():
-            print(f"DEBUG: Installer not found. Checked: {exe_path}")
-            raise HTTPException(
-                status_code=404, 
-                detail="Agent installer not found on server. Please ensure the 'dist' folder is uploaded."
-            )
-            
-        return FileResponse(
-            path=exe_path,
-            filename="MedServ_Security_Agent_Setup.exe",
-            media_type="application/octet-stream"
-        )
-    except Exception as e:
-        if isinstance(e, HTTPException): raise e
-        print(f"DOWNLOAD ERROR: {str(e)}")
-        raise HTTPException(status_code=500, detail="An error occurred while preparing the download.")
+    if not exe_path.exists():
+        raise HTTPException(status_code=404, detail="Agent installer not found on server. Please contact IT.")
+        
+    return FileResponse(
+        path=exe_path,
+        filename="MedServ_Security_Agent_Setup.exe",
+        media_type="application/octet-stream"
+    )
 
 @router.post("/enroll", response_model=schemas.DeviceRead)
 def enroll_device(device: schemas.DeviceEnroll, db: Session = Depends(get_db)):
