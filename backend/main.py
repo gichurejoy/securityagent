@@ -7,7 +7,7 @@ from database import engine, Base
 from routers import agent, dashboard, auth, portal
 
 # Create tables
-# Base.metadata.create_all(bind=engine)
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Security Agent API", version="1.0.0")
 
