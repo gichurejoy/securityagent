@@ -12,6 +12,26 @@ from services import scoring
 
 router = APIRouter(prefix="/v1", tags=["agent"])
 
+@router.get("/diag/paths")
+def diagnostic_paths():
+    import os
+    try:
+        current_file = Path(__file__).resolve()
+        parent_1 = current_file.parent # routers/
+        parent_2 = parent_1.parent # backend/
+        parent_3 = parent_2.parent # securityagent/
+        
+        return {
+            "__file__": str(current_file),
+            "cwd": os.getcwd(),
+            "parent_3": str(parent_3),
+            "parent_3_contents": os.listdir(parent_3) if parent_3.exists() else "Not found",
+            "dist_exists": (parent_3 / "dist").exists(),
+            "dist_contents": os.listdir(parent_3 / "dist") if (parent_3 / "dist").exists() else "None"
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
 @router.get("/agent/download")
 def download_agent():
     """Serves the latest compiled security agent executable."""
