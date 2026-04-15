@@ -13,9 +13,10 @@ Base.metadata.create_all(bind=engine)
 # AFTER
 root_path = os.getenv("API_ROOT_PATH", "/api")
 app = FastAPI(
-    title="Security Agent API",
+    title="Security Agent API", 
     version="1.0.0",
-    root_path=root_path
+    root_path=root_path,
+    openapi_url="/openapi.json"
 )
 
 # Setup CORS for the React dashboard

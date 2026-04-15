@@ -6,12 +6,31 @@ import os
 import sys
 import subprocess
 import argparse
+from logging.handlers import RotatingFileHandler
 from config import load_config, save_config, get_server_url, get_device_id, get_company_token, CONFIG_DIR
 from enrollment import get_machine_guid, get_system_info
 from checks.windows import run_all_checks
 
+# Ensure config directory exists
+if not CONFIG_DIR.exists():
+    try:
+        CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    except:
+        pass
+
 # Set up logging for agent
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+log_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+log_file = CONFIG_DIR / "agent.log"
+
+# Console handler
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(log_formatter)
+
+# File handler (keep logs for debugging after installation)
+file_handler = RotatingFileHandler(str(log_file), maxBytes=1024*1024, backupCount=5)
+file_handler.setFormatter(log_formatter)
+
+logging.basicConfig(level=logging.INFO, handlers=[console_handler, file_handler])
 logger = logging.getLogger(__name__)
 
 # Queue logic
@@ -53,11 +72,11 @@ def enroll_if_needed(email_override=None):
         response.raise_for_status()
         
         # Save the enrolled ID to config for future runs
-        data = response.json()
         save_config({
             "server_url": server_url, 
             "device_id": guid,
-            "company_token": company_token
+            "company_token": company_token,
+            "employee_email": final_email
         })
         logger.info(f"Successfully enrolled as {guid}")
         return guid
@@ -68,16 +87,22 @@ def enroll_if_needed(email_override=None):
 def save_to_queue(payload):
     queue = []
     if OFFLINE_QUEUE_FILE.exists():
-        with open(OFFLINE_QUEUE_FILE, "r") as f:
-            queue = json.load(f)
+        try:
+            with open(OFFLINE_QUEUE_FILE, "r") as f:
+                queue = json.load(f)
+        except:
+            queue = []
     queue.append(payload)
     with open(OFFLINE_QUEUE_FILE, "w") as f:
         json.dump(queue, f, indent=4)
 
 def load_queue():
     if OFFLINE_QUEUE_FILE.exists():
-        with open(OFFLINE_QUEUE_FILE, "r") as f:
-            return json.load(f)
+        try:
+            with open(OFFLINE_QUEUE_FILE, "r") as f:
+                return json.load(f)
+        except:
+            return []
     return []
 
 def clear_queue():
@@ -118,7 +143,11 @@ def run_scan():
         
     logger.info("Executing local security scan...")
     # Gather actual results
-    check_results = run_all_checks()
+    try:
+        check_results = run_all_checks()
+    except Exception as e:
+        logger.error(f"Check execution failed: {e}")
+        return
     
     payload = {
         "device_id": device_id,
@@ -196,13 +225,19 @@ if __name__ == "__main__":
     if args.email:
         logger.info(f"Identity provided via CLI: {args.email}")
         conf = load_config()
-        # Ensure we don't overwrite server_url or company_token if they exist
         conf["employee_email"] = args.email
         save_config(conf)
 
-    if enroll_if_needed(email_override=args.email):
-        while True:
-            run_scan()
-            poll_commands()
-            # Every 5 minutes as per spec
-            time.sleep(300)
+    # LOOP FOREVER - Even if enrollment fails, stay alive and retry
+    # This ensures the process is "visible" in Task Manager/Background
+    while True:
+        device_id = enroll_if_needed(email_override=args.email)
+        if device_id:
+            logger.info("Device connected. Starting active monitoring.")
+            while True:
+                run_scan()
+                poll_commands()
+                time.sleep(300) # Every 5 minutes
+        else:
+            logger.warning("Enrollment failed. Retrying in 60 seconds...")
+            time.sleep(60) # Wait and try again

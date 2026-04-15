@@ -5,8 +5,8 @@ from pathlib import Path
 CONFIG_DIR = Path(os.environ.get("PROGRAMDATA", ".")) / "MedServDiagnostic"
 CONFIG_FILE = CONFIG_DIR / "config.json"
 
-DEFAULT_SERVER_URL = "http://127.0.0.1:8000"
-DEFAULT_COMPANY_TOKEN = "TEST_COMPANY_TOKEN_123"
+DEFAULT_SERVER_URL = "https://security.medservafrica.com/api"
+DEFAULT_COMPANY_TOKEN = "PROD_COMPANY_TOKEN_ABC"
 
 def save_config(config_data):
     if not CONFIG_DIR.exists():
