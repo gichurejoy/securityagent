@@ -88,12 +88,15 @@ def submit_scan(scan: schemas.ScanCreate, db: Session = Depends(get_db)):
     
     # Process findings and check results
     for r in results_as_dicts:
+        # Safe truncation for 1000-char database columns
+        safe_detail = r["detail"][:999] if isinstance(r["detail"], str) else str(r["detail"])[:999]
+        
         cr = models.CheckResult(
             scan_id=new_scan.id,
             check_key=r["check_key"],
             category=r["category"],
             status=r["status"],
-            detail=r["detail"]
+            detail=safe_detail
         )
         db.add(cr)
         
@@ -111,12 +114,12 @@ def submit_scan(scan: schemas.ScanCreate, db: Session = Depends(get_db)):
                     first_seen_at=get_eat_time(),
                     last_seen_at=get_eat_time(),
                     status=schemas.FindingStatus.OPEN,
-                    notes=r["detail"]
+                    notes=safe_detail
                 )
                 db.add(finding)
             else:
                 existing_finding.last_seen_at = get_eat_time()
-                existing_finding.notes = r["detail"]
+                existing_finding.notes = safe_detail
         else:
              # Auto-close resolved finding
              existing_finding = db.query(models.Finding).filter(

@@ -22,6 +22,12 @@ if not CONFIG_DIR.exists():
 log_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 log_file = CONFIG_DIR / "agent.log"
 
+# Standard headers to bypass server firewalls
+DEFAULT_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Content-Type": "application/json"
+}
+
 # Console handler
 console_handler = logging.StreamHandler()
 console_handler.setFormatter(log_formatter)
@@ -68,7 +74,7 @@ def enroll_if_needed(email_override=None):
     }
     
     try:
-        response = requests.post(f"{server_url}/api/v1/enroll", json=payload, timeout=10)
+        response = requests.post(f"{server_url}/v1/enroll", json=payload, headers=DEFAULT_HEADERS, timeout=10)
         response.raise_for_status()
         
         # Save the enrolled ID to config for future runs
@@ -118,7 +124,7 @@ def process_queue(server_url):
     successful = []
     for item in queue:
         try:
-            requests.post(f"{server_url}/api/v1/scan/results", json=item, timeout=10)
+            requests.post(f"{server_url}/v1/scan/results", json=item, headers=DEFAULT_HEADERS, timeout=10)
             successful.append(item)
         except Exception as e:
             logger.error(f"Failed to send queued item: {e}")
@@ -156,12 +162,16 @@ def run_scan():
     }
     
     try:
-        response = requests.post(f"{server_url}/api/v1/scan/results", json=payload, timeout=10)
+        response = requests.post(f"{server_url}/v1/scan/results", json=payload, headers=DEFAULT_HEADERS, timeout=10)
         response.raise_for_status()
         logger.info("Scan results submitted successfully.")
         
         # If we reached here, server is online, flush the queue
         process_queue(server_url)
+    except requests.exceptions.HTTPError as e:
+        server_error_text = e.response.text if hasattr(e.response, 'text') else "No details"
+        logger.error(f"Failed to submit scan (HTTP Error): {e} | Details: {server_error_text}. Queueing for offline delivery.")
+        save_to_queue(payload)
     except Exception as e:
         logger.error(f"Failed to submit scan: {e}. Queueing for offline delivery.")
         save_to_queue(payload)
@@ -200,8 +210,10 @@ def poll_commands():
     server_url = get_server_url()
     company_token = get_company_token()
     
+    req_headers = DEFAULT_HEADERS.copy()
+    req_headers["X-Company-Token"] = company_token
     try:
-        response = requests.get(f"{server_url}/api/v1/commands/{device_id}", headers={"X-Company-Token": company_token}, timeout=5)
+        response = requests.get(f"{server_url}/v1/commands/{device_id}", headers=req_headers, timeout=5)
         response.raise_for_status()
         commands = response.json()
         for cmd in commands:
@@ -221,10 +233,22 @@ if __name__ == "__main__":
 
     logger.info("Security Agent initializing...")
     
+    # Load config and ensure it's not pointing to local dev by mistake
+    conf = load_config()
+    server_url = get_server_url()
+    
+    if "127.0.0.1" in server_url or "localhost" in server_url:
+        from config import DEFAULT_SERVER_URL
+        logger.info(f"Old local URL detected ({server_url}). Re-setting to production: {DEFAULT_SERVER_URL}")
+        conf["server_url"] = DEFAULT_SERVER_URL
+        save_config(conf)
+        server_url = DEFAULT_SERVER_URL
+
+    logger.info(f"Using server URL: {server_url}")
+
     # If email provided via installer, force it into config
     if args.email:
         logger.info(f"Identity provided via CLI: {args.email}")
-        conf = load_config()
         conf["employee_email"] = args.email
         save_config(conf)
 
